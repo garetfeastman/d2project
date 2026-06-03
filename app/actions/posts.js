@@ -37,24 +37,25 @@ export async function createPost(_prevState, formData) {
 
   if (!content) return { error: 'Post content is required.' }
 
-  let imageUrl = null
-  try {
-    imageUrl = await saveImage(imageFile)
-  } catch (err) {
-    return { error: err.message }
-  }
+  // Image uploads require writable filesystem — not supported on Vercel
+  const imageUrl = null
 
-  await prisma.post.create({
-    data: {
-      content,
-      buildRole,
-      isLFG,
-      lfgRole,
-      videoUrl,
-      imageUrl,
-      authorId: session.user.id,
-    },
-  })
+  try {
+    await prisma.post.create({
+      data: {
+        content,
+        buildRole,
+        isLFG,
+        lfgRole,
+        videoUrl,
+        imageUrl,
+        authorId: session.user.id,
+      },
+    })
+  } catch (err) {
+    console.error('createPost error:', err)
+    return { error: 'Failed to create post. Please try again.' }
+  }
 
   revalidatePath('/feed')
   return { success: true }
